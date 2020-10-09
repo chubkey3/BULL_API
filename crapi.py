@@ -93,18 +93,13 @@ class crapi(object):
             #print(string_name, string_id, string_level, string_max_level, string_quantity, string_url)
             #make dictionary
             card_list[card_name] = [card_id, card_level, card_max_level, card_quantity, card_url]
-        #print(card_list)
-        #print(string) 
-        #lists = [1,4,52,2,6]
-        #print(sorted(lists))
         for x in card_list.keys():
-            card_levels.append(13-int(card_list[x][2])+int(card_list[x][1].split('s')[0]))
-            #print(card_list[x])
-            #print(sorted(card_list[x]))
+            card_levels.append([13-int(card_list[x][2])+int(card_list[x][1].split('s')[0]), card_list[x])
         card_levels = sorted(card_levels, reverse=True)
-        #print(card_levels)
-        #print(round(sum(card_levels[0:32])/32, 2))
-        print({k: v for k, v in sorted(card_list.items(), key=lambda item: item[1])})
+        top_32_average = (round(sum(card_levels[0:32])/32, 2))
+        average = (round(sum(card_levels)/len(card_levels), 2))
+        raw = {k: v for k, v in sorted(card_list.items(), key=lambda item: item[1])}
+        return(card_levels, top_32_average, average, card_list)#, card_level)
         '''
         ##################################
         list_test = []
@@ -131,6 +126,30 @@ class crapi(object):
         '''
         #return(card_list)
     #def create_deck(self): #add a custom url generator for app
+    def get_current_deck(self):
+        raw_current_deck = self.stats.split('currentDeck')[1].split('currentFavouriteCard')[0]
+        less_raw_current_deck = ''
+        self.exclude = [32, 123, 91, 58, 34, 10, 44]
+        card_list = self.cards()[3]
+        current_deck = {}
+        for x in range(len(raw_current_deck)):
+            for i in raw_current_deck[x]:
+                if ord(i) in self.exclude: 
+                    pass
+                else:
+                    less_raw_current_deck += i
+        less_raw_current_deck = less_raw_current_deck.split('}}')[0:-1]
+        for x in range(len(less_raw_current_deck)):
+            card_name = less_raw_current_deck[x].split('name')[1].split('id')[0]
+            current_deck[card_name] = card_list[card_name]
+        return(current_deck)
+    def get_current_deck_url(self):
+        return(generate_url(convert_id(player_info.get_current_deck())))
+def convert_id(dictionary):
+    converted_ids = []
+    for x in dictionary:
+        converted_ids.append(dictionary[x][0])
+    return(converted_ids)
 def generate_url(card_ids):
     url = 'https://link.clashroyale.com/deck/en?deck='
     for x in range(len(card_ids)):
@@ -139,22 +158,25 @@ def generate_url(card_ids):
 if __name__ == "__main__":
     #if check_tag('JU0GQ8') == True:
         #player_info = crapi('JU0GQ8')
-    tagz = '882J2GPL'
-    if check_tag(tagz) == True:
-        player_info = crapi(tagz)
+    tag = '8QCJRCL' 
+    tag = 'JU0GQ8'
+    if check_tag(tag) == True:
+        player_info = crapi(tag)
         #print(player_info.clan())
         player_info.developer_tools()
         import random
         def choose_random_time():
             return(f'{str(random.randint(0,1))}:{str(random.randint(0,5))}{str(random.randint(0,9))}:00')
+        player_info.get_current_deck()
+        #print()
         #print(choose_random_time())
         #print(generate_url([29039, 2309409, 3240402343j, 2034930294, 30482042834309j]))
         #print(player_info.chest_cycle())
-        print(player_info.cards())
+        #print(player_info.cards())
         #print(player_info.)
         #print(f'Welcome {player_info.name()} at {player_info.trophies()}')
-
-
+        #print(player_info.get_current_deck_url())
+        print(player_info.cards()[1])
 
 
 

@@ -1,4 +1,4 @@
-import pygame, random, json, requests, sys
+import pygame, random, json, requests, sys, win32clipboard
 from crapi import *
 import whatplayer,textbox
 class GOLMBUTTON(object):
@@ -66,6 +66,11 @@ class text_input_box(GOLMBUTTON):
                 self.text=self.text[:-1]
         elif (key==pygame.K_RETURN):
             self.clicked=False
+        elif (key==pygame.K_LCTRL):
+            win32clipboard.OpenClipboard()
+            data = win32clipboard.GetClipboardData()
+            win32clipboard.CloseClipboard()
+            self.text = data[0:11]
 def displaytext(surface,text,position,font,color=(0,0,0),align=(0,0)):#better?
     display=font.render(text,True,color)
     rect=display.get_rect()
@@ -279,8 +284,8 @@ backbutton_01=GOLMBUTTON(screen,pygame.Rect(0,0,100,30),(240,80,49),PESTFONT,"Go
 loadbutton=GOLMBUTTON(screen,pygame.Rect(565,300,150,40),(255,3,204),KINGFONT,"Load!",textcolor=(240,80,49))
 playertag=text_input_box(screen,pygame.Rect(530,200,260,70),(142,155,229),KINGFONT)
 
-menu_names=["main","chests","decks","rg"]
-background_files=["backround.png","chestbackround.png","ELIXIR_GOLM.png","error_02.png"]
+menu_names=["main","chests","decks","rg", "profile"]
+background_files=["backround.png","chestbackround.png","ELIXIR_GOLM.png","error_02.png", "Clash-Royale-overview-min.jpg"]
 backgrounds={}
 for x in range(len(menu_names)):
     backgrounds[menu_names[x]]=pygame.Surface((screen.get_width(),screen.get_height()),pygame.SRCALPHA)
@@ -446,7 +451,7 @@ while (done == False):
                 if (player_loaded):
                     if (x in whatplayer.cardnames):
                         GOLEMRECT1=pygame.Rect(displayx_01-5,displayy_01+individualcardsize[1],individualcardsize[0]+10,displayonthatprofilescreengapbetweencards[1]-10)
-                        pygame.draw.rect(screen,(0,0,64),GOLEMRECT1)
+                        #pygame.draw.rect(screen,(0,0,64),GOLEMRECT1)
                         currentlevel=13-collection[x][1]+collection[x][0]
                         rarity=collection[x][3]
                         cardprogress=collection[x][2]
@@ -512,3 +517,4 @@ while (done == False):
     clock.tick(60)
     #-----------------------------------
 pygame.quit()
+

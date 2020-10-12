@@ -38,7 +38,7 @@ class search_clan(object):
                     return(str(int(dictionary[x])-1))
                 else: 
                     return(dictionary[x])
-        print(f'{card} Can not be Found Inside of the Data')
+        #print(f'{card} Can not be Found Inside of the Data')
         return('0')
     def get_members_card_info(self, card):
         card_amounts = {}

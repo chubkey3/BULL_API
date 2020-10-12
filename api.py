@@ -1,5 +1,6 @@
-import pygame, random, json, requests, sys, win32clipboard
+import pygame, random, json, requests, sys, win32clipboard, math
 from crapi import *
+from search_clan import *
 import whatplayer,textbox
 class GOLMBUTTON(object):
     def __init__(self,wernmrnwenreuwjndfjonbiudfbnjkrensdfoinweornweiornoskdnmvkcnbjklcvnbjkdrkrhjbgerjkltnrjbtidjnbiubndriutnodrngidnfgjkdnbjkcvnkbjndkjrbtjkrnbtjkebriktjberkjbntkjebnrtreter,rect,color,font,text="",textcolor=(0,0,0)):
@@ -71,6 +72,89 @@ class text_input_box(GOLMBUTTON):
             data = win32clipboard.GetClipboardData()
             win32clipboard.CloseClipboard()
             self.text = data[0:11]
+
+class carddisplay(object):
+    def __init__(self,surface,rect,collection,names,cardgap=[20,40],columns=10,scrollvalue=20):
+        self.surface=surface
+        self.rect=rect
+        self.collection=collection
+        self.names=names
+        self.cardgap=cardgap
+        self.columns=columns
+        self.rows=(math.ceil(len(self.collection.keys())/self.columns))
+        self.cardscroll=0
+        self.scrollvalue=scrollvalue
+        self.maxcardscroll=max(0,(self.rows*(individualcardsize[1]+self.cardgap[1]))-self.rect.height)
+        self.cardpositions={}
+
+        KING_GOLM=0
+        for x in self.collection.keys():
+            displayx_01=self.rect.left+(individualcardsize[0]+self.cardgap[0])*(KING_GOLM%self.columns)
+            displayy_01=self.rect.top+(individualcardsize[1]+self.cardgap[1])*(KING_GOLM//self.columns)
+            self.cardpositions[(displayx_01,displayy_01)]=x
+            KING_GOLM+=1
+    def display(self):
+        for x in self.cardpositions:
+            if (x[1]-self.cardscroll>=self.rect.top and x[1]-self.cardscroll<=self.rect.bottom-individualcardsize[1]):
+                displaycard(screen,self.cardpositions[x],(x[0],x[1]-self.cardscroll))
+                
+                #only attempt to display amount of cards if there is a valid tag
+                if (player_loaded):
+                    if (self.cardpositions[x] in self.names):
+                        GOLEMRECT1=pygame.Rect(x[0]-5,x[1]-self.cardscroll+individualcardsize[1],individualcardsize[0]+10,self.cardgap[1]-10)
+                        currentlevel=13-self.collection[self.cardpositions[x]][1]+self.collection[self.cardpositions[x]][0]
+                        rarity=self.collection[self.cardpositions[x]][3]
+                        cardprogress=self.collection[self.cardpositions[x]][2]
+                        cardstonext=cardstoupgrade[currentlevel-1-(13-rarity)]
+
+                        if (cardstonext>=1000):
+                            GOLMSTRING1=str(cardstonext//1000)+"k"#make the label smaller
+                        else:
+                            GOLMSTRING1=str(cardstonext)#totally unnecessary variable
+                        
+                        if (cardprogress>=cardstonext or not currentlevel<13):
+                            GOLMCOLOR1=(0,255,0)
+                        else:
+                            GOLMCOLOR1=(0,207,255)
+                        
+                        GOLMCOLOR2=(255,255,255)
+                        if (rarity==13):
+                            GOLMCOLOR2=(160,160,160)
+                        elif (rarity==11):
+                            GOLMCOLOR2=(255,190,95)
+                        elif (rarity==8):
+                            GOLMCOLOR2=(200,135,246)
+                        elif (rarity==5):
+                            GOLMCOLOR2=(135,220,200)
+
+
+                        displaytextoutline(screen,"Level "+str(currentlevel),GOLEMRECT1.center,CARDFONT,color=GOLMCOLOR2,align=(0,1))
+                        if (currentlevel<13):
+                            displaytextoutline(screen,str(cardprogress)+"/"+GOLMSTRING1,GOLEMRECT1.center,CARDFONT,color=GOLMCOLOR1,align=(0,-1))
+                        else:
+                            displaytextoutline(screen,"(Maxed)",GOLEMRECT1.center,CARDFONT,color=GOLMCOLOR1,align=(0,-1))
+            #KING_GOLM+=1
+    
+    def scroll(self,direction,mouse):
+        if (mouse[0]>self.rect.left and mouse[0]<self.rect.right and mouse[1]>self.rect.top and mouse[1]<self.rect.bottom):
+            if (direction=="down"):
+                self.cardscroll+=self.scrollvalue
+            elif (direction=="up"):
+                self.cardscroll-=self.scrollvalue
+            else:
+                print ("read the instructions next time")#what instructions? i don't see any all i see is messy code
+        if (self.cardscroll<0):#prevent the user from scrolling once they reached the top
+            self.cardscroll=0 
+        elif (self.cardscroll>self.maxcardscroll):
+            self.cardscroll=int(self.maxcardscroll)
+    
+    def clickcard(self,position):
+        if (position[0]>=self.rect.left and position[0]<=self.rect.right and position[1]>=self.rect.top and position[0]<=self.rect.bottom):
+            for x in self.cardpositions:
+                if (position[0]>=x[0] and position[0]<=x[0]+individualcardsize[0] and position[1]+self.cardscroll>=x[1] and position[1]+self.cardscroll<=x[1]+individualcardsize[1]):
+                    return self.cardpositions[x]
+        return ""
+
 def displaytext(surface,text,position,font,color=(0,0,0),align=(0,0)):#better?
     display=font.render(text,True,color)
     rect=display.get_rect()
@@ -237,8 +321,6 @@ chest_images={
     }
 cardimage=pygame.transform.scale(pygame.image.load("allcards_01_10x10.png"),(600,720))
 cardimagedimensions=[10,10]
-displayonthatprofilescreengapbetweencards=[20,40]
-startypositionofcardsonscreen=100
 individualcardsize=[cardimage.get_width()//cardimagedimensions[0],cardimage.get_height()//cardimagedimensions[1]]
 
 leagueimages=pygame.transform.scale(pygame.image.load("league_badges.png"),(600,60))
@@ -266,19 +348,27 @@ chestcycle={
 
 player_loaded=False
 playername="BULL API"
+playerclan="No Clan"
+clantag=""
 cards=[]
 collection={}
 current_deck_02=[]
 playerstats={"level":0,"trophies":0,"donations":0,"wins":0}
 playertypetext=""
+cardtosearch=""
+carddisplay_03=carddisplay(screen,pygame.Rect(450,100,780,800),collection,whatplayer.cardnames,scrollvalue=40)
+carddisplay_04=carddisplay(screen,pygame.Rect(50,425,380,400),collection,whatplayer.cardnames,scrollvalue=30)
 
 annoyusertime=0.0
-cardscroll=0
-maxcardscroll=cardimage.get_height()+displayonthatprofilescreengapbetweencards[1]*(cardimagedimensions[1])-screen.get_height()+startypositionofcardsonscreen
+busytext_01="King Golem"
+busytext_02=(255,255,0)
+searchonnextframe=False#just so the program can display "searching" text later in the frame before the search happens
 
 profilebutton=GOLMBUTTON(screen,pygame.Rect(0,0,400,450),(156,80,243),KINGFONT)
 chestbutton=GOLMBUTTON(screen,pygame.Rect(0,450,400,450),(156,80,243),KINGFONT)
 decksbutton=GOLMBUTTON(screen,pygame.Rect(880,0,400,450),(156,80,243),KINGFONT)
+searchbutton=GOLMBUTTON(screen,pygame.Rect(880,450,400,450),(156,80,243),KINGFONT)
+startsearch=GOLMBUTTON(screen,pygame.Rect(300,200,150,individualcardsize[1]),(129,214,61),GOLMFONT,"GO",textcolor=(0,207,255))
 backbutton=GOLMBUTTON(screen,pygame.Rect(50,50,150,50),(240,80,49),KINGFONT,"Go Back",textcolor=(85,255,85))
 backbutton_01=GOLMBUTTON(screen,pygame.Rect(0,0,100,30),(240,80,49),PESTFONT,"Go Back",textcolor=(85,255,85))
 loadbutton=GOLMBUTTON(screen,pygame.Rect(565,300,150,40),(255,3,204),KINGFONT,"Load!",textcolor=(240,80,49))
@@ -294,6 +384,7 @@ BULL=pygame.transform.scale(pygame.image.load("BUL_API.png"),(400,400))
 
 description_03=textbox.ravager(screen,"",pygame.Rect(25,675,350,200),PESTFONT,color=(0,0,64),textcolor=(142,155,229),scrollvalue=40)
 description_03label=GOLMBUTTON(screen,pygame.Rect(25,635,350,30),(240,80,49),PESTFONT,"Rate My Profile!",textcolor=(85,255,85))
+description_04=textbox.ravager(screen,"",pygame.Rect(610,225,630,625),KINGFONT,color=(64,0,0),textcolor=(212,91,208),scrollvalue=40)
 
 kingmad_sound=pygame.mixer.Sound("king_mad_03.ogg")
 
@@ -302,6 +393,7 @@ done=False
 # main program loop
 while (done == False):
     #all event processing goes below
+    
     for event in pygame.event.get():
         if event.type==pygame.QUIT:
             done=True#User perssed close
@@ -313,9 +405,14 @@ while (done == False):
                         menu="chests"
                     elif (decksbutton.click(pygame.mouse.get_pos())):
                         menu="decks"
+                    elif (searchbutton.click(pygame.mouse.get_pos())):
+                        menu="search"
+                        cardtosearch=""
+                        busytext_01=""
+                        carddisplay_04.cardscroll=0
                     elif (profilebutton.click(pygame.mouse.get_pos())):
                         menu="profile"
-                        cardscroll=0
+                        carddisplay_03.cardscroll=0
                     elif (loadbutton.click(pygame.mouse.get_pos())):
                         if (check_tag(playertag.text)):
                             player_loaded=True#some information is not available if the player is not loaded
@@ -323,6 +420,8 @@ while (done == False):
                             player_info=crapi(playertag.text)
                             if (player_info.name()!=""):
                                 playername=player_info.name()
+                                playerclan=(player_info.clan()[0])
+                                clantag=(player_info.clan()[1].strip("#"))
                                 chestcycle=player_info.chest_cycle()
                                 cards=player_info.cards()
                                 collection={x:[int(cards[3][x][y]) for y in range(1,5)] for x in cards[3]}
@@ -331,6 +430,8 @@ while (done == False):
                                 playerstats["trophies"]=int(player_info.trophies())
                                 playerstats["donations"]=int(player_info.get_info(17))
                                 playerstats["wins"]=int(player_info.wins())
+                                carddisplay_03=carddisplay(screen,pygame.Rect(450,100,780,800),collection,whatplayer.cardnames,scrollvalue=40)
+                                carddisplay_04=carddisplay(screen,pygame.Rect(50,425,460,450),collection,whatplayer.cardnames,columns=6,scrollvalue=30)
                             #-------------------------------------------------------
                             description_03.changetext("")
                             #print (whatplayer.getplayertype(set([current_deck_02[x][0] for x in range(len(current_deck_02))]),3,"32"))
@@ -364,31 +465,71 @@ while (done == False):
                             playertypetext=""
                         else:
                             description_03.changetext("Cannot determine information for that player tag.")
+                    #carddisplay_03.clickcard(pygame.mouse.get_pos())
+                elif (menu=="search"):
+                    cardtosearch_KING_GOLM=carddisplay_04.clickcard(pygame.mouse.get_pos())
+                    if (cardtosearch_KING_GOLM!=""):
+                        cardtosearch=str(cardtosearch_KING_GOLM)
+                    
+                    if (startsearch.click(pygame.mouse.get_pos())):
+                        if (not player_loaded):
+                            busytext_01="No player tag found."
+                            busytext_02=(255,0,0)
+                        elif (clantag=="No Clan"):
+                            busytext_01="You are not in a Clan!"
+                            busytext_02=(255,0,0)
+                        elif (cardtosearch==""):
+                            busytext_01="Please select a card."
+                            busytext_02=(255,0,0)
+                        else:
+                            busytext_01="Searching, please wait."
+                            busytext_02=(255,255,0)
 
-                if ((backbutton.click(pygame.mouse.get_pos()) and (menu=="chests" or menu=="decks")) or (backbutton_01.click(pygame.mouse.get_pos()) and menu=="profile")):
+                if ((backbutton.click(pygame.mouse.get_pos()) and (menu=="chests" or menu=="decks" or menu=="search")) or (backbutton_01.click(pygame.mouse.get_pos()) and menu=="profile")):
                     menu="main"
             
             if (event.button==4):
                 if (menu=="profile"):
                     description_03.scroll("up",pygame.mouse.get_pos())
+                    carddisplay_03.scroll("up",pygame.mouse.get_pos())
+                elif (menu=="search"):
+                    description_04.scroll("up",pygame.mouse.get_pos())
+                    carddisplay_04.scroll("up",pygame.mouse.get_pos())
 
-                    if (pygame.mouse.get_pos()[0]>=400 and pygame.mouse.get_pos()[1]>=startypositionofcardsonscreen):
-                        cardscroll-=40
-                        if (cardscroll<0):
-                            cardscroll=0
             elif (event.button==5):
                 if (menu=="profile"):
                     description_03.scroll("down",pygame.mouse.get_pos())
-
-                    if (pygame.mouse.get_pos()[0]>=400 and pygame.mouse.get_pos()[1]>=startypositionofcardsonscreen):#hard coded???
-                        cardscroll+=40
-                        if (cardscroll>maxcardscroll):
-                            cardscroll=maxcardscroll
+                    carddisplay_03.scroll("down",pygame.mouse.get_pos())
+                elif (menu=="search"):
+                    description_04.scroll("down",pygame.mouse.get_pos())
+                    carddisplay_04.scroll("down",pygame.mouse.get_pos())
             
         if event.type==pygame.KEYDOWN:
             if (playertag.clicked):
                 playertag.addcharacter(event.key)
     
+    if (searchonnextframe):
+        searchonnextframe=False
+        test = search_clan(clantag)
+
+        allplayers=(test.get_card_amounts(cardtosearch))
+        maxplayers={x:"" for x,y in sorted(allplayers.items(),key=lambda KING: int(KING[1]),reverse=True) if (y==-1 and x!=playername)}
+        allplayers_01={(x+" "*(15-len(x))+": "):y for x,y in sorted(allplayers.items(),key=lambda KING: int(KING[1]),reverse=True) if (y!=-1 and y!="0" and x!=playername)}
+
+        player_string_01=cardtosearch+" in "+playerclan
+        for x in (maxplayers,allplayers_01):
+            if (x==maxplayers and len(maxplayers)>0):
+                player_string_01+=(" \\n \\n These players have the card at level 13. They are able to give unlimited cards away if they have enough gold.")
+            elif (x==allplayers_01 and len(allplayers_01)>0):
+                player_string_01+=(" \\n \\n These players have the card below level 13. They are able to give as many cards away as they have.")
+            for y in x:
+                player_string_01+=(" \\n "+str(y)+" "+str(x[y]))
+        player_string_01+=(" \\n \\n All remaining players in the clan do not have any cards to give away.")
+
+        description_04.changetext(player_string_01)
+        #print (player_string_01)
+        busytext_01="Success!"
+        busytext_02=(0,255,0)
     #-----------------------------------
     screen.fill(0)
 
@@ -410,8 +551,8 @@ while (done == False):
         displaytextoutline(screen,"upcoming chests",(200,675),GOLMFONT,color=(212,91,208),align=(0,-1))
         displaytextoutline(screen,"View popular",(1080,225),GOLMFONT,color=(212,91,208),align=(0,1))
         displaytextoutline(screen,"decks",(1080,225),GOLMFONT,color=(212,91,208),align=(0,-1))
-        displaytextoutline(screen,"Coming",(1080,675),GOLMFONT,color=(212,91,208),align=(0,1))
-        displaytextoutline(screen,"soon",(1080,675),GOLMFONT,color=(212,91,208),align=(0,-1))
+        displaytextoutline(screen,"Search your",(1080,675),GOLMFONT,color=(212,91,208),align=(0,1))
+        displaytextoutline(screen,"Clan for cards",(1080,675),GOLMFONT,color=(212,91,208),align=(0,-1))
         displaytextoutline(screen,"Current Player",(640,410),KINGFONT,color=(156,80,243),align=(0,1))
         displaytextoutline(screen,playername,(640,410),GOLMFONT,color=(156,80,243),align=(0,-1))
         
@@ -437,57 +578,9 @@ while (done == False):
         backbutton.display()
     elif (menu=="profile"):
         displaytextoutline(screen,"Card Collection",(840,45),RVGRFONT,color=(129,214,61))
-        #for x in range(len(whatplayer.cardnames)):
-        KING_GOLM=0
-        for x in collection.keys():
-            #x and y coordinates for displaying each individual card
-            displayx_01=450+(individualcardsize[0]+displayonthatprofilescreengapbetweencards[0])*(KING_GOLM%10)
-            displayy_01=startypositionofcardsonscreen+(individualcardsize[1]+displayonthatprofilescreengapbetweencards[1])*(KING_GOLM//10)-cardscroll
-            #if the card's position+scroll values is still on the screen:
-            if (displayy_01>=startypositionofcardsonscreen and displayy_01<=900-individualcardsize[1]):
-                displaycard(screen,x,(displayx_01,displayy_01))
-                
-                #only attempt to display amount of cards if there is a valid tag
-                if (player_loaded):
-                    if (x in whatplayer.cardnames):
-                        GOLEMRECT1=pygame.Rect(displayx_01-5,displayy_01+individualcardsize[1],individualcardsize[0]+10,displayonthatprofilescreengapbetweencards[1]-10)
-                        #pygame.draw.rect(screen,(0,0,64),GOLEMRECT1)
-                        currentlevel=13-collection[x][1]+collection[x][0]
-                        rarity=collection[x][3]
-                        cardprogress=collection[x][2]
-                        cardstonext=cardstoupgrade[currentlevel-1-(13-rarity)]
-
-                        if (cardstonext>=1000):
-                            GOLMSTRING1=str(cardstonext//1000)+"k"#make the label smaller
-                        else:
-                            GOLMSTRING1=str(cardstonext)#totally unnecessary variable
-                        
-                        if (cardprogress>=cardstonext or not currentlevel<13):
-                            GOLMCOLOR1=(0,255,0)
-                        else:
-                            GOLMCOLOR1=(0,207,255)
-                        
-                        GOLMCOLOR2=(255,255,255)
-                        if (rarity==13):
-                            GOLMCOLOR2=(160,160,160)
-                        elif (rarity==11):
-                            GOLMCOLOR2=(255,190,95)
-                        elif (rarity==8):
-                            GOLMCOLOR2=(200,135,246)
-                        elif (rarity==5):
-                            GOLMCOLOR2=(135,220,200)
-
-
-                        displaytextoutline(screen,"Level "+str(currentlevel),GOLEMRECT1.center,CARDFONT,color=GOLMCOLOR2,align=(0,1))
-                        if (currentlevel<13):
-                            displaytextoutline(screen,str(cardprogress)+"/"+GOLMSTRING1,GOLEMRECT1.center,CARDFONT,color=GOLMCOLOR1,align=(0,-1))
-                        else:
-                            displaytextoutline(screen,"(Maxed)",GOLEMRECT1.center,CARDFONT,color=GOLMCOLOR1,align=(0,-1))
-            KING_GOLM+=1
-
-        
-        
         backbutton_01.display()
+        carddisplay_03.display()
+        
         pygame.draw.rect(screen,(255,3,204),pygame.Rect(100,0,300,30))
         displaytextoutline(screen,"Player Profile",(250,15),PESTFONT,color=(129,214,61))
 
@@ -496,10 +589,34 @@ while (done == False):
         
         displayprofile(screen,(25,50),playername,playerstats)
         
-        pygame.draw.line(screen,(0,0,0),(400,startypositionofcardsonscreen-10),(1280,startypositionofcardsonscreen-10),14)
-        pygame.draw.line(screen,(0,207,255),(400,startypositionofcardsonscreen-10),(1280,startypositionofcardsonscreen-10),10)
+        pygame.draw.line(screen,(0,0,0),(400,carddisplay_03.rect.top-10),(1280,carddisplay_03.rect.top-10),14)
+        pygame.draw.line(screen,(0,207,255),(400,carddisplay_03.rect.top-10),(1280,carddisplay_03.rect.top-10),10)
         pygame.draw.line(screen,(0,0,0),(400,0),(400,900),14)
         pygame.draw.line(screen,(0,207,255),(400,0),(400,900),10)
+    elif (menu=="search"):
+        backbutton.display()
+        startsearch.display()
+        carddisplay_04.display()
+        description_04.display()
+
+        displaytextoutline(screen,"Clan Card Search",(765,75),RVGRFONT,color=(240,80,49))
+        displaytextoutline(screen,"Previous search results will appear here.",(925,225),KINGFONT,color=(240,80,49),align=(0,1))
+        displaytextoutline(screen,"Click on a card from the options below then press GO to search.",(280,390),PESTFONT,color=(240,80,49),align=(0,1))
+        displaytextoutline(screen,"Searching for",(100+int(individualcardsize[0]/2),200),PESTFONT,color=(240,80,49),align=(0,1))
+        displaytextoutline(screen,"in "+playerclan,(100+int(individualcardsize[0]/2),200+individualcardsize[1]),PESTFONT,color=(240,80,49),align=(0,-1))
+        displaytextoutline(screen,busytext_01,(375,225+individualcardsize[1]),PESTFONT,color=busytext_02,align=(0,-1))
+        
+        if (cardtosearch in whatplayer.cardnames):
+            displaycard(screen,cardtosearch,(100,200))
+        else:
+            pygame.draw.rect(screen,(128,128,128),(100+5,200+5,individualcardsize[0]-10,individualcardsize[1]-10))
+
+        for x in [[(0,400),(560,400)],[(560,150),(560,900)],[(0,150),(1280,150)]]:
+            pygame.draw.line(screen,(0,0,0),x[0],x[1],14)
+            pygame.draw.line(screen,(0,207,255),x[0],x[1],10)
+        
+        if (busytext_01=="Searching, please wait."):
+            searchonnextframe=True
     elif (menu=="rg"):
         print ("invalid player tag enjoy the screen")
 

@@ -12,6 +12,11 @@ class crapi(object):
         self.stats = json.dumps(self.r.json(), indent = 2)
         self.chests = json.dumps(self.c.json(), indent = 2).split('\n')
     def get_info(self, index):
+        if (index==21 or index==22):
+            if (len(["69" for x in self.stats.split('\n')[20:22] if "clan" in x.strip(" ")])>0):
+                return (((self.stats.split('\n')).pop(index)).strip()).split(':')[1].strip()[:-1].strip('"')
+            else:
+                return "No Clan"
         stat = (((self.stats.split('\n')).pop(index)).strip()).split(':')[1].strip()[:-1].strip('"')
         return(stat)
     def developer_tools(self):

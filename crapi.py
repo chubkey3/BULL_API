@@ -1,14 +1,15 @@
 import json, requests, sys, random
+MAX_LEVEL=14
 def check_tag(tag):
-    check_url = requests.get(f"https://api.clashroyale.com/v1/players/%2C{tag}", headers={"Accept":"application/json", "authorization":"Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiIsImtpZCI6IjI4YTMxOGY3LTAwMDAtYTFlYi03ZmExLTJjNzQzM2M2Y2NhNSJ9.eyJpc3MiOiJzdXBlcmNlbGwiLCJhdWQiOiJzdXBlcmNlbGw6Z2FtZWFwaSIsImp0aSI6ImE3NWMzMWZjLTM1NmQtNDY2My1iOTYzLTZmNWJhOTIwODdjZSIsImlhdCI6MTYwMTg0MTM2Miwic3ViIjoiZGV2ZWxvcGVyLzdmMjFhZGVkLTAwMTMtNDZmNC03YTMzLTYzZGJmMzAxNGFiZSIsInNjb3BlcyI6WyJyb3lhbGUiXSwibGltaXRzIjpbeyJ0aWVyIjoiZGV2ZWxvcGVyL3NpbHZlciIsInR5cGUiOiJ0aHJvdHRsaW5nIn0seyJjaWRycyI6WyI1MC45OC4xMTAuMTgzIl0sInR5cGUiOiJjbGllbnQifV19.b9Y4o4fVacELs-tC1CnppLZmkXFYJOcpDalBVtJT8felvE_DbT72FzW_ZRjquURZOawATea7LJRsGJbcWt-FFg"}, params = {"limit":20})
+    check_url = requests.get(f"https://api.clashroyale.com/v1/players/%23{tag}", headers={"Accept":"application/json", "authorization":"Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiIsImtpZCI6IjI4YTMxOGY3LTAwMDAtYTFlYi03ZmExLTJjNzQzM2M2Y2NhNSJ9.eyJpc3MiOiJzdXBlcmNlbGwiLCJhdWQiOiJzdXBlcmNlbGw6Z2FtZWFwaSIsImp0aSI6ImE3NWMzMWZjLTM1NmQtNDY2My1iOTYzLTZmNWJhOTIwODdjZSIsImlhdCI6MTYwMTg0MTM2Miwic3ViIjoiZGV2ZWxvcGVyLzdmMjFhZGVkLTAwMTMtNDZmNC03YTMzLTYzZGJmMzAxNGFiZSIsInNjb3BlcyI6WyJyb3lhbGUiXSwibGltaXRzIjpbeyJ0aWVyIjoiZGV2ZWxvcGVyL3NpbHZlciIsInR5cGUiOiJ0aHJvdHRsaW5nIn0seyJjaWRycyI6WyI1MC45OC4xMTAuMTgzIl0sInR5cGUiOiJjbGllbnQifV19.b9Y4o4fVacELs-tC1CnppLZmkXFYJOcpDalBVtJT8felvE_DbT72FzW_ZRjquURZOawATea7LJRsGJbcWt-FFg"}, params = {"limit":20})
     if "notFound" not in json.dumps(check_url.json(), indent = 2):
         return(True)
     print(f'{tag} is not a valid tag')
 class crapi(object):
     def __init__(self, tag):
         self.tag = tag
-        self.r=requests.get(f"https://api.clashroyale.com/v1/players/%2C{tag}", headers={"Accept":"application/json", "authorization":"Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiIsImtpZCI6IjI4YTMxOGY3LTAwMDAtYTFlYi03ZmExLTJjNzQzM2M2Y2NhNSJ9.eyJpc3MiOiJzdXBlcmNlbGwiLCJhdWQiOiJzdXBlcmNlbGw6Z2FtZWFwaSIsImp0aSI6ImE3NWMzMWZjLTM1NmQtNDY2My1iOTYzLTZmNWJhOTIwODdjZSIsImlhdCI6MTYwMTg0MTM2Miwic3ViIjoiZGV2ZWxvcGVyLzdmMjFhZGVkLTAwMTMtNDZmNC03YTMzLTYzZGJmMzAxNGFiZSIsInNjb3BlcyI6WyJyb3lhbGUiXSwibGltaXRzIjpbeyJ0aWVyIjoiZGV2ZWxvcGVyL3NpbHZlciIsInR5cGUiOiJ0aHJvdHRsaW5nIn0seyJjaWRycyI6WyI1MC45OC4xMTAuMTgzIl0sInR5cGUiOiJjbGllbnQifV19.b9Y4o4fVacELs-tC1CnppLZmkXFYJOcpDalBVtJT8felvE_DbT72FzW_ZRjquURZOawATea7LJRsGJbcWt-FFg"}, params = {"limit":20})
-        self.c=r=requests.get(f"https://api.clashroyale.com/v1/players/%2C{tag}/upcomingchests", headers={"Accept":"application/json", "authorization":"Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiIsImtpZCI6IjI4YTMxOGY3LTAwMDAtYTFlYi03ZmExLTJjNzQzM2M2Y2NhNSJ9.eyJpc3MiOiJzdXBlcmNlbGwiLCJhdWQiOiJzdXBlcmNlbGw6Z2FtZWFwaSIsImp0aSI6ImE3NWMzMWZjLTM1NmQtNDY2My1iOTYzLTZmNWJhOTIwODdjZSIsImlhdCI6MTYwMTg0MTM2Miwic3ViIjoiZGV2ZWxvcGVyLzdmMjFhZGVkLTAwMTMtNDZmNC03YTMzLTYzZGJmMzAxNGFiZSIsInNjb3BlcyI6WyJyb3lhbGUiXSwibGltaXRzIjpbeyJ0aWVyIjoiZGV2ZWxvcGVyL3NpbHZlciIsInR5cGUiOiJ0aHJvdHRsaW5nIn0seyJjaWRycyI6WyI1MC45OC4xMTAuMTgzIl0sInR5cGUiOiJjbGllbnQifV19.b9Y4o4fVacELs-tC1CnppLZmkXFYJOcpDalBVtJT8felvE_DbT72FzW_ZRjquURZOawATea7LJRsGJbcWt-FFg"}, params = {"limit":20})
+        self.r=requests.get(f"https://api.clashroyale.com/v1/players/%23{tag}", headers={"Accept":"application/json", "authorization":"Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiIsImtpZCI6IjI4YTMxOGY3LTAwMDAtYTFlYi03ZmExLTJjNzQzM2M2Y2NhNSJ9.eyJpc3MiOiJzdXBlcmNlbGwiLCJhdWQiOiJzdXBlcmNlbGw6Z2FtZWFwaSIsImp0aSI6ImE3NWMzMWZjLTM1NmQtNDY2My1iOTYzLTZmNWJhOTIwODdjZSIsImlhdCI6MTYwMTg0MTM2Miwic3ViIjoiZGV2ZWxvcGVyLzdmMjFhZGVkLTAwMTMtNDZmNC03YTMzLTYzZGJmMzAxNGFiZSIsInNjb3BlcyI6WyJyb3lhbGUiXSwibGltaXRzIjpbeyJ0aWVyIjoiZGV2ZWxvcGVyL3NpbHZlciIsInR5cGUiOiJ0aHJvdHRsaW5nIn0seyJjaWRycyI6WyI1MC45OC4xMTAuMTgzIl0sInR5cGUiOiJjbGllbnQifV19.b9Y4o4fVacELs-tC1CnppLZmkXFYJOcpDalBVtJT8felvE_DbT72FzW_ZRjquURZOawATea7LJRsGJbcWt-FFg"}, params = {"limit":20})
+        self.c=r=requests.get(f"https://api.clashroyale.com/v1/players/%23{tag}/upcomingchests", headers={"Accept":"application/json", "authorization":"Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiIsImtpZCI6IjI4YTMxOGY3LTAwMDAtYTFlYi03ZmExLTJjNzQzM2M2Y2NhNSJ9.eyJpc3MiOiJzdXBlcmNlbGwiLCJhdWQiOiJzdXBlcmNlbGw6Z2FtZWFwaSIsImp0aSI6ImE3NWMzMWZjLTM1NmQtNDY2My1iOTYzLTZmNWJhOTIwODdjZSIsImlhdCI6MTYwMTg0MTM2Miwic3ViIjoiZGV2ZWxvcGVyLzdmMjFhZGVkLTAwMTMtNDZmNC03YTMzLTYzZGJmMzAxNGFiZSIsInNjb3BlcyI6WyJyb3lhbGUiXSwibGltaXRzIjpbeyJ0aWVyIjoiZGV2ZWxvcGVyL3NpbHZlciIsInR5cGUiOiJ0aHJvdHRsaW5nIn0seyJjaWRycyI6WyI1MC45OC4xMTAuMTgzIl0sInR5cGUiOiJjbGllbnQifV19.b9Y4o4fVacELs-tC1CnppLZmkXFYJOcpDalBVtJT8felvE_DbT72FzW_ZRjquURZOawATea7LJRsGJbcWt-FFg"}, params = {"limit":20})
         self.stats = json.dumps(self.r.json(), indent = 2)
         self.chests = json.dumps(self.c.json(), indent = 2).split('\n')
     def get_info(self, index):
@@ -83,16 +84,16 @@ class crapi(object):
             card_quantity = cards[x].split('count')[1].split('iconUrl')[0]
             card_url = cards[x].split('medium')[1]
 
-            card_level=str(13-int(card_max_level)+int(card_level))
+            card_level=str(MAX_LEVEL-int(card_max_level)+int(card_level))
             rarity=str(card_max_level)
-            card_max_level="13"
+            card_max_level=str(MAX_LEVEL)
             if ("RamR" in card_name):
                 card_name="RamRider"
             elif ("HogR" in card_name):
                 card_name="HogRider"
             card_list[card_name] = [card_id, card_level, card_max_level, card_quantity, rarity, card_url]
         for x in card_list.keys():
-            card_levels.append(13-int(card_list[x][2])+int(card_list[x][1].split('s')[0]))#, card_list[x])#why is this here?
+            card_levels.append(MAX_LEVEL-int(card_list[x][2])+int(card_list[x][1].split('s')[0]))#, card_list[x])#why is this here?
             if ("RamR" in x):
                 best32cards.append(["RamRider",card_levels[-1]])
             elif ("HogR" in x):
@@ -106,7 +107,7 @@ class crapi(object):
         average = (round(sum(card_levels)/len(card_levels), 2))
         raw = {k: v for k, v in sorted(card_list.items(), key=lambda item: int(item[1][1]),reverse=True)}
         card_list=dict(raw)
-        maxed_cards=([best32cards[x] for x in range(len(best32cards)) if best32cards[x][1]==13])
+        maxed_cards=([best32cards[x] for x in range(len(best32cards)) if best32cards[x][1]==MAX_LEVEL])
         if (len(maxed_cards)>bestamount):
             random.shuffle(maxed_cards)
             sortedbest32cards=maxed_cards[:bestamount]        
@@ -137,7 +138,7 @@ class crapi(object):
             elif ("HogR" in card_name):
                 card_name="HogRider"
             current_deck[card_name] = card_list[card_name]
-            current_deck_01.append([card_name,13-int(card_list[card_name][2])+int(card_list[card_name][1].split("s")[0])])
+            current_deck_01.append([card_name,MAX_LEVEL-int(card_list[card_name][2])+int(card_list[card_name][1].split("s")[0])])
         ######################
         return(current_deck_01)
     def get_current_deck_url(self):

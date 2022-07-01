@@ -1,7 +1,10 @@
-import pygame, random, json, requests, sys, win32clipboard, math
+import pygame, random, json, requests, sys, math
 from crapi import *
 from search_clan import *
 import whatplayer,textbox
+
+MAX_LEVEL=14
+
 class GOLMBUTTON(object):
     def __init__(self,wernmrnwenreuwjndfjonbiudfbnjkrensdfoinweornweiornoskdnmvkcnbjklcvnbjkdrkrhjbgerjkltnrjbtidjnbiubndriutnodrngidnfgjkdnbjkcvnkbjndkjrbtjkrnbtjkebriktjberkjbntkjebnrtreter,rect,color,font,text="",textcolor=(0,0,0)):
         self.playplaykinggolemwolf=wernmrnwenreuwjndfjonbiudfbnjkrensdfoinweornweiornoskdnmvkcnbjklcvnbjkdrkrhjbgerjkltnrjbtidjnbiubndriutnodrngidnfgjkdnbjkcvnkbjndkjrbtjkrnbtjkebriktjberkjbntkjebnrtreter#don't worry, you can refer to this as playplaykinggolemwolf not what it actually is
@@ -67,11 +70,6 @@ class text_input_box(GOLMBUTTON):
                 self.text=self.text[:-1]
         elif (key==pygame.K_RETURN):
             self.clicked=False
-        elif (key==pygame.K_LCTRL):
-            win32clipboard.OpenClipboard()
-            data = win32clipboard.GetClipboardData()
-            win32clipboard.CloseClipboard()
-            self.text = data[0:11]
 
 class carddisplay(object):
     def __init__(self,surface,rect,collection,names,cardgap=[20,40],columns=10,scrollvalue=20):
@@ -102,34 +100,45 @@ class carddisplay(object):
                 if (player_loaded):
                     if (self.cardpositions[x] in self.names):
                         GOLEMRECT1=pygame.Rect(x[0]-5,x[1]-self.cardscroll+individualcardsize[1],individualcardsize[0]+10,self.cardgap[1]-10)
-                        currentlevel=13-self.collection[self.cardpositions[x]][1]+self.collection[self.cardpositions[x]][0]
-                        rarity=self.collection[self.cardpositions[x]][3]
+                        currentlevel=MAX_LEVEL-self.collection[self.cardpositions[x]][1]+self.collection[self.cardpositions[x]][0]
+                        rarity=self.collection[self.cardpositions[x]][3]#14 common 12 rare 9 epic 6 legendary
                         cardprogress=self.collection[self.cardpositions[x]][2]
-                        cardstonext=cardstoupgrade[currentlevel-1-(13-rarity)]
+                        #cardstonext=cardstoupgrade[currentlevel-1-(14-rarity)]#(14-rarity) gives the starting level of the card
+                        GOLMCOLOR2=(255,255,255)
+                        #cardstonext=6969
+                        
+                        #index x = cards to upgrade to next level when at level x+1
+                        cardupgradeindex=currentlevel-(MAX_LEVEL-rarity)-1
+                        
+                        #have to split this up because card amounts are not constant anymore
+                        if (rarity==MAX_LEVEL):
+                            cardstonext=cardstoupgrade_01[cardupgradeindex]
+                            GOLMCOLOR2=(160,160,160)
+                        elif (rarity==MAX_LEVEL-2):
+                            cardstonext=cardstoupgrade_02[cardupgradeindex]
+                            GOLMCOLOR2=(255,190,95)
+                        elif (rarity==MAX_LEVEL-5):
+                            GOLMCOLOR2=(200,135,246)
+                            cardstonext=cardstoupgrade_03[cardupgradeindex]
+                        elif (rarity==MAX_LEVEL-8):
+                            GOLMCOLOR2=(135,220,200)
+                            cardstonext=cardstoupgrade_04[cardupgradeindex]
 
                         if (cardstonext>=1000):
                             GOLMSTRING1=str(cardstonext//1000)+"k"#make the label smaller
                         else:
                             GOLMSTRING1=str(cardstonext)#totally unnecessary variable
                         
-                        if (cardprogress>=cardstonext or not currentlevel<13):
+                        if (cardprogress>=cardstonext or not currentlevel<MAX_LEVEL):
                             GOLMCOLOR1=(0,255,0)
                         else:
                             GOLMCOLOR1=(0,207,255)
                         
-                        GOLMCOLOR2=(255,255,255)
-                        if (rarity==13):
-                            GOLMCOLOR2=(160,160,160)
-                        elif (rarity==11):
-                            GOLMCOLOR2=(255,190,95)
-                        elif (rarity==8):
-                            GOLMCOLOR2=(200,135,246)
-                        elif (rarity==5):
-                            GOLMCOLOR2=(135,220,200)
+                        
 
 
                         displaytextoutline(screen,"Level "+str(currentlevel),GOLEMRECT1.center,CARDFONT,color=GOLMCOLOR2,align=(0,1))
-                        if (currentlevel<13):
+                        if (currentlevel<MAX_LEVEL):
                             displaytextoutline(screen,str(cardprogress)+"/"+GOLMSTRING1,GOLEMRECT1.center,CARDFONT,color=GOLMCOLOR1,align=(0,-1))
                         else:
                             displaytextoutline(screen,"(Maxed)",GOLEMRECT1.center,CARDFONT,color=GOLMCOLOR1,align=(0,-1))
@@ -255,7 +264,10 @@ def displayprofile(surface,position,playername,stats):
     displaytextoutline(surface,"Average Card Level: "+str(getdecklevel(current_deck_02)),(position[0]+int(xsize/2),position[1]+ysize-3),PESTFONT,color=(255,3,204),align=(0,1))
 
 def displaycard(surface,nospacename,position):
-    index=(whatplayer.cardnames.index(nospacename))
+    if (nospacename in whatplayer.cardnames):
+        index=(whatplayer.cardnames.index(nospacename))
+    else:
+        index=0
     xarea=(index%cardimagedimensions[0]*cardimage.get_width()//cardimagedimensions[0])
     yarea=(index//cardimagedimensions[1]*cardimage.get_height()//cardimagedimensions[1])
     surface.blit(cardimage,position,area=pygame.Rect(xarea,yarea,cardimage.get_width()//cardimagedimensions[0],cardimage.get_height()//cardimagedimensions[1]))
@@ -309,6 +321,10 @@ KINGFONT = pygame.font.Font("KINGFONT.ttf",36)
 GOLMFONT = pygame.font.Font("KINGFONT.ttf",48)
 RVGRFONT = pygame.font.Font("KINGFONT.ttf",60)
 cardstoupgrade=[2,4,10,20,50,100,200,400,800,1000,2000,5000,6969]
+cardstoupgrade_01=[2,4,10,20,50,100,200,400,800,1000,1500,3000,5000,6969]
+cardstoupgrade_02=[2,4,10,20,50,100,200,400,500,750,1250,6969]
+cardstoupgrade_03=[2,4,10,20,40,50,100,200,6969]
+cardstoupgrade_04=[2,4,6,10,20,6969]
 
 chest_images={
     "SilverChest":pygame.transform.scale(pygame.image.load("SilverChest.png"),(120,120)),
@@ -519,9 +535,9 @@ while (done == False):
         player_string_01=cardtosearch+" in "+playerclan
         for x in (maxplayers,allplayers_01):
             if (x==maxplayers and len(maxplayers)>0):
-                player_string_01+=(" \\n \\n These players have the card at level 13. They are able to give unlimited cards away if they have enough gold.")
+                player_string_01+=(" \\n \\n These players have the card at the Max Level. They are able to give unlimited cards away if they have enough gold.")
             elif (x==allplayers_01 and len(allplayers_01)>0):
-                player_string_01+=(" \\n \\n These players have the card below level 13. They are able to give as many cards away as they have.")
+                player_string_01+=(" \\n \\n These players have the card below the Max Level. They are able to give as many cards away as they have.")
             for y in x:
                 player_string_01+=(" \\n "+str(y)+" "+str(x[y]))
         player_string_01+=(" \\n \\n All remaining players in the clan do not have any cards to give away.")

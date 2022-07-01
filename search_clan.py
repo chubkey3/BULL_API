@@ -1,9 +1,10 @@
 import json, requests, sys, random
 from crapi import *
+MAX_LEVEL=14
 class search_clan(object):
     def __init__(self, clan_tag):
         self.clan_tag = clan_tag
-        self.clan_info_raw = self.r=requests.get(f"https://api.clashroyale.com/v1/clans/%2C{self.clan_tag}/members", headers={"Accept":"application/json", "authorization":"Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiIsImtpZCI6IjI4YTMxOGY3LTAwMDAtYTFlYi03ZmExLTJjNzQzM2M2Y2NhNSJ9.eyJpc3MiOiJzdXBlcmNlbGwiLCJhdWQiOiJzdXBlcmNlbGw6Z2FtZWFwaSIsImp0aSI6ImE3NWMzMWZjLTM1NmQtNDY2My1iOTYzLTZmNWJhOTIwODdjZSIsImlhdCI6MTYwMTg0MTM2Miwic3ViIjoiZGV2ZWxvcGVyLzdmMjFhZGVkLTAwMTMtNDZmNC03YTMzLTYzZGJmMzAxNGFiZSIsInNjb3BlcyI6WyJyb3lhbGUiXSwibGltaXRzIjpbeyJ0aWVyIjoiZGV2ZWxvcGVyL3NpbHZlciIsInR5cGUiOiJ0aHJvdHRsaW5nIn0seyJjaWRycyI6WyI1MC45OC4xMTAuMTgzIl0sInR5cGUiOiJjbGllbnQifV19.b9Y4o4fVacELs-tC1CnppLZmkXFYJOcpDalBVtJT8felvE_DbT72FzW_ZRjquURZOawATea7LJRsGJbcWt-FFg"}, params = {"limit":50})
+        self.clan_info_raw = self.r=requests.get(f"https://api.clashroyale.com/v1/clans/%23{self.clan_tag}/members", headers={"Accept":"application/json", "authorization":"Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiIsImtpZCI6IjI4YTMxOGY3LTAwMDAtYTFlYi03ZmExLTJjNzQzM2M2Y2NhNSJ9.eyJpc3MiOiJzdXBlcmNlbGwiLCJhdWQiOiJzdXBlcmNlbGw6Z2FtZWFwaSIsImp0aSI6ImE3NWMzMWZjLTM1NmQtNDY2My1iOTYzLTZmNWJhOTIwODdjZSIsImlhdCI6MTYwMTg0MTM2Miwic3ViIjoiZGV2ZWxvcGVyLzdmMjFhZGVkLTAwMTMtNDZmNC03YTMzLTYzZGJmMzAxNGFiZSIsInNjb3BlcyI6WyJyb3lhbGUiXSwibGltaXRzIjpbeyJ0aWVyIjoiZGV2ZWxvcGVyL3NpbHZlciIsInR5cGUiOiJ0aHJvdHRsaW5nIn0seyJjaWRycyI6WyI1MC45OC4xMTAuMTgzIl0sInR5cGUiOiJjbGllbnQifV19.b9Y4o4fVacELs-tC1CnppLZmkXFYJOcpDalBVtJT8felvE_DbT72FzW_ZRjquURZOawATea7LJRsGJbcWt-FFg"}, params = {"limit":50})
         self.clan_info = json.dumps(self.clan_info_raw.json(), indent=2)
     def clean_data(self):
         clan_info = self.clan_info.strip(']').split('items')[1].split('paging')[0]
@@ -32,7 +33,7 @@ class search_clan(object):
     def search_card(self, dictionary, card, card_data, card_data_2):
         for x in dictionary.keys():
             if x == str(card):
-                if card_data[x] == '13':
+                if card_data[x] == str(MAX_LEVEL):
                     return(-1)
                 elif card_data[x] == '9' and card_data_2[x] == '5':
                     return(str(int(dictionary[x])-1))
